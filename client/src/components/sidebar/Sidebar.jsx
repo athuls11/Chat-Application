@@ -1,15 +1,24 @@
+import React, { useState } from "react";
 import Conversations from "./Conversations";
-// import LogoutButton from "./LogoutButton";
-// import SearchInput from "./SearchInput";
+import GroupConversations from "./GroupConversations";
+import LogoutButton from "./LogoutButton";
+import SwitchButtons from "./SwitchButtons";
 
 const Sidebar = () => {
+  const [showChat, setShowChat] = useState(true);
+
+  const handleSwitch = () => {
+    setShowChat((prevShowChat) => !prevShowChat);
+  };
+
   return (
     <div className="border-r border-slate-500 p-4 flex flex-col">
-      {/* <SearchInput /> */}
+      <SwitchButtons showChat={showChat} handleSwitch={handleSwitch} />
       <div className="divider px-3"></div>
-      <Conversations />
-      {/* <LogoutButton /> */}
+      {showChat ? <Conversations /> : <GroupConversations />}
+      <LogoutButton />
     </div>
   );
 };
+
 export default Sidebar;

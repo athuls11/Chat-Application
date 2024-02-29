@@ -21,6 +21,8 @@ export const createGroup = async (req, res) => {
 
     await newGroup.save();
 
+    io.emit("updateGroups", newGroup);
+
     return res.status(201).json({
       success: true,
       message: "Group created successfully.",
