@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { config } from "dotenv";
 import cookieParser from "cookie-parser";
 import userRoutes from "./routes/user.routes.js";
@@ -11,6 +12,7 @@ const PORT = process.env.PORT || 5000;
 // const app = express();
 config();
 
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use("/api/user", userRoutes);
