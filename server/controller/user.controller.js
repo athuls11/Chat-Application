@@ -53,6 +53,7 @@ export const userLogin = async (req, res) => {
       success: true,
       message: `Hurry! you are now logged in.`,
       _id: user._id,
+      username: user.username,
       token,
     });
   } catch (error) {

@@ -2,9 +2,11 @@ import Message from "./Message";
 import { useEffect, useState, useRef } from "react";
 import useConversation from "../../zustand/useConversations";
 import axios from "../../axios";
+import useListenMessages from "../../hooks/useListenMessages";
 
 const Messages = () => {
   const { messages, setMessages, selectedConversation } = useConversation();
+  useListenMessages();
 
   const lastMessageRef = useRef();
 
@@ -29,7 +31,6 @@ const Messages = () => {
           config
         );
         const data = res.data;
-        console.log("res", res.data);
         setMessages(data);
       } catch (error) {
         console.log("Error fetching data:", error);

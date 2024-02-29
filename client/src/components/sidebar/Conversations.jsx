@@ -15,7 +15,6 @@ const Conversations = () => {
           },
         };
         const res = await axios.get("/api/user", config);
-        console.log("res", res.data.data);
         setConversations(res.data.data);
       } catch (error) {
         console.log("Error fetching data:", error);

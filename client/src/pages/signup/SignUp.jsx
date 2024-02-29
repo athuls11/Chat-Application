@@ -30,18 +30,6 @@ const SignUp = () => {
       const data = res.data;
       localStorage.setItem("chat-user", JSON.stringify(data));
       setAuthUser(data);
-      // axios
-      //   .post("api/user/signup", inputs)
-      //   .then((res) => {
-      //     console.log("response", res.data);
-      //     // localStorage
-      //     localStorage.setItem("chat-user", JSON.stringify(data));
-      //     // context
-      //     navigate("/login");
-      //   })
-      //   .catch((err) => {
-      //     alert(err.response.data.message);
-      //   });
     } catch (error) {
       console.log("Error fetching data:", error);
     }
