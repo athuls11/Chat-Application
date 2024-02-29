@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "../../axios";
+import { useAuthContext } from "../../context/AuthContext";
 
 const Login = () => {
   const [inputs, setInputs] = useState({
@@ -9,7 +10,8 @@ const Login = () => {
     password: "",
   });
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
+  const { setAuthUser } = useAuthContext();
 
   const handleInputErrors = ({ username, password }) => {
     if (!username || !password) {
@@ -24,15 +26,12 @@ const Login = () => {
     const success = handleInputErrors(inputs);
     if (!success) return;
     try {
-      axios
-        .post("api/user/login", inputs)
-        .then((res) => {
-          console.log("response", res.data);
-          navigate("/");
-        })
-        .catch((err) => {
-          alert(err.response.data.message);
-        });
+      const res = await axios.post("api/user/login", inputs);
+      const data = res.data;
+      const { token } = res.data;
+      localStorage.setItem("accessToken", token);
+      localStorage.setItem("chat-user", JSON.stringify(data));
+      setAuthUser(data);
     } catch (error) {
       console.log("Error fetching data:", error);
     }

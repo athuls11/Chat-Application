@@ -2,9 +2,10 @@ import jwt from "jsonwebtoken";
 
 const verifyToken = async (req, res, next) => {
   try {
-    // const authHeader = req.headers["authorization"];
-    // const token = authHeader && authHeader.split(" ")[1];
-    const token = req.cookies.jwt;
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    // console.log("req", req.headers);
+    // const token = req.cookies.jwt;
     if (token == null)
       return res
         .sendStatus(401)

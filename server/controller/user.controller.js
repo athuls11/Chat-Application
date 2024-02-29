@@ -13,6 +13,7 @@ export const userRegister = async (req, res) => {
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ username, password: hashedPassword });
+    const token = await generateToken(newUser._id, res);
     await newUser.save();
     return res.status(200).json({
       success: true,
@@ -51,6 +52,7 @@ export const userLogin = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: `Hurry! you are now logged in.`,
+      _id: user._id,
       token,
     });
   } catch (error) {

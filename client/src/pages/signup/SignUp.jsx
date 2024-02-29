@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import axios from "../../axios";
+import { useAuthContext } from "../../context/AuthContext";
 
 const SignUp = () => {
   const [inputs, setInputs] = useState({
@@ -9,7 +10,8 @@ const SignUp = () => {
     password: "",
   });
 
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
+  const { setAuthUser } = useAuthContext();
 
   const handleInputErrors = ({ username, password }) => {
     if (!username || !password) {
@@ -24,15 +26,22 @@ const SignUp = () => {
     const success = handleInputErrors(inputs);
     if (!success) return;
     try {
-      axios
-        .post("api/user/signup", inputs)
-        .then((res) => {
-          console.log("response", res.data);
-          navigate("/login");
-        })
-        .catch((err) => {
-          alert(err.response.data.message);
-        });
+      const res = await axios.post("api/user/signup", inputs);
+      const data = res.data;
+      localStorage.setItem("chat-user", JSON.stringify(data));
+      setAuthUser(data);
+      // axios
+      //   .post("api/user/signup", inputs)
+      //   .then((res) => {
+      //     console.log("response", res.data);
+      //     // localStorage
+      //     localStorage.setItem("chat-user", JSON.stringify(data));
+      //     // context
+      //     navigate("/login");
+      //   })
+      //   .catch((err) => {
+      //     alert(err.response.data.message);
+      //   });
     } catch (error) {
       console.log("Error fetching data:", error);
     }

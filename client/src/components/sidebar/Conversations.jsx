@@ -1,14 +1,39 @@
+import { useEffect, useState } from "react";
 import Conversation from "./Conversation";
+import axios from "../../axios";
 
 const Conversations = () => {
+  const [conversations, setConversations] = useState([]);
+
+  useEffect(() => {
+    const getConversations = async () => {
+      try {
+        const accessToken = localStorage.getItem("accessToken");
+        const config = {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        };
+        const res = await axios.get("/api/user", config);
+        console.log("res", res.data.data);
+        setConversations(res.data.data);
+      } catch (error) {
+        console.log("Error fetching data:", error);
+      }
+    };
+    getConversations();
+  }, []);
+
   return (
     <div className="py-2 flex flex-col overflow-auto">
-      <Conversation />
-      <Conversation />
-      <Conversation />
-      <Conversation />
-      <Conversation />
-      <Conversation />
+      {conversations.map((conversation, index) => {
+        return (
+          <Conversation
+            key={conversation._id}
+            conversation={conversation}
+          />
+        );
+      })}
     </div>
   );
 };
