@@ -28,11 +28,8 @@ export const sendMessage = async (req, res) => {
       privateMessage.messages.push(newMessage._id);
     }
 
-    // await privateMessage.save();
-    // await newMessage.save();
     await Promise.all([privateMessage.save(), newMessage.save()]);
 
-    // SOCKET IO FUNCTIONALITY
     const receiverSocketId = getReciverSocketId(receiverId);
     if (receiverSocketId) {
       io.to(receiverSocketId).emit("newMessage", newMessage);
