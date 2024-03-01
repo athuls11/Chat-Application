@@ -1,12 +1,18 @@
 import PrivateMessage from "../models/personalMessage.model.js";
 import Message from "../models/message.model.js";
 import { getReciverSocketId, io } from "../socket/socket.js";
+import CryptoJS from "crypto-js";
 
 export const sendMessage = async (req, res) => {
   try {
     const { message } = req.body;
     const { id: receiverId } = req.params;
     const senderId = req.user.userId;
+
+    const encryptedMessage = CryptoJS.AES.encrypt(
+      message,
+      process.env.SECRET_KEY
+    ).toString();
 
     let privateMessage = await PrivateMessage.findOne({
       participants: { $all: [senderId, receiverId] },
@@ -21,7 +27,7 @@ export const sendMessage = async (req, res) => {
     const newMessage = new Message({
       senderId,
       receiverId,
-      message,
+      message: encryptedMessage,
     });
 
     if (newMessage) {
@@ -32,10 +38,22 @@ export const sendMessage = async (req, res) => {
 
     const receiverSocketId = getReciverSocketId(receiverId);
     if (receiverSocketId) {
-      io.to(receiverSocketId).emit("newMessage", newMessage);
+      const bytes = CryptoJS.AES.decrypt(
+        encryptedMessage,
+        process.env.SECRET_KEY
+      );
+      const decryptedMessage = bytes.toString(CryptoJS.enc.Utf8);
+
+      io.to(receiverSocketId).emit("newMessage", {
+        ...newMessage.toObject(),
+        message: decryptedMessage,
+      });
     }
 
-    res.status(201).json(newMessage);
+    res.status(201).json({
+      ...newMessage.toObject(),
+      message: message,
+    });
   } catch (error) {
     console.log("error", error.message);
     res.status(500).json({ success: false, message: "Internal server error" });
@@ -54,9 +72,19 @@ export const getMessages = async (req, res) => {
     if (!conversation) {
       return res.status(200).json([]);
     }
-    const message = conversation.messages;
+    const decryptedMessages = conversation.messages.map((message) => {
+      const decryptedMessage = CryptoJS.AES.decrypt(
+        message.message,
+        process.env.SECRET_KEY
+      ).toString(CryptoJS.enc.Utf8);
 
-    res.status(200).json(message);
+      return {
+        ...message.toObject(),
+        message: decryptedMessage,
+      };
+    });
+
+    res.status(200).json(decryptedMessages);
   } catch (error) {
     console.log("error", error.message);
     res.status(500).json({ success: false, message: "Internal server error" });
