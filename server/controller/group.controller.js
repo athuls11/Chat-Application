@@ -21,7 +21,7 @@ export const createGroup = async (req, res) => {
 
     await newGroup.save();
 
-    io.emit("updateGroups", newGroup);
+    // io.emit("updateGroups", newGroup);
 
     return res.status(201).json({
       success: true,
@@ -202,6 +202,7 @@ export const sendGroupMessage = async (req, res) => {
 
 export const getGroupMessages = async (req, res) => {
   try {
+    console.log("------------getGroupMessages-----------------");
     const groupId = req.params.id;
     const groupWithMessages = await Group.findById(groupId).populate(
       "messages"
@@ -236,5 +237,55 @@ export const allGroupsOfSingleUser = async (req, res) => {
   } catch (error) {
     console.log("error", error.message);
     res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
+
+export const sendGroupMessagesToUserGroups = async (req, res) => {
+  try {
+    const { message } = req.body;
+    const senderId = req.user.userId;
+
+    const userGroupIds = await findUserGroups(senderId);
+
+    const messagesPromises = userGroupIds.map(async (groupId) => {
+      let groupMessage = await Group.findById(groupId);
+
+      const newGroupMessage = new GroupMessage({
+        senderId,
+        groupId,
+        message,
+      });
+
+      if (newGroupMessage) {
+        groupMessage.messages.push(newGroupMessage._id);
+      }
+
+      await Promise.all([groupMessage.save(), newGroupMessage.save()]);
+
+      io.to(groupId.toString()).emit("newGroupMessage", newGroupMessage);
+
+      return newGroupMessage;
+    });
+
+    const messages = await Promise.all(messagesPromises);
+
+    return res.status(201).json(messages);
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+const findUserGroups = async (userId) => {
+  try {
+    const groups = await Group.find({
+      members: userId,
+    })
+      .select("_id")
+      .exec();
+    return groups.map((group) => group._id);
+  } catch (error) {
+    console.error("Error finding user groups:", error);
+    throw error;
   }
 };
