@@ -43,14 +43,26 @@ const GroupConversations = () => {
     <div className="py-2 flex flex-col overflow-auto">
       <NewGroupButton handleCreateGroup={handleCreateGroup} />
 
-      {conversations.map((conversation, index) => {
+      {conversations.length > 0 ? (
+        conversations.map((conversation) => {
+          return (
+            <GroupConversation
+              key={conversation._id}
+              conversation={conversation}
+            />
+          );
+        })
+      ) : (
+        <p>No groups available.</p>
+      )}
+      {/* {conversations.map((conversation, index) => {
         return (
           <GroupConversation
             key={conversation._id}
             conversation={conversation}
           />
         );
-      })}
+      })} */}
     </div>
   );
 };
