@@ -2,6 +2,7 @@ import Group from "../models/group.model.js";
 import User from "../models/user.model.js";
 import GroupMessage from "../models/groupMessage.model.js";
 import { io } from "../socket/socket.js";
+import CryptoJS from "crypto-js";
 
 export const createGroup = async (req, res) => {
   try {
@@ -177,12 +178,17 @@ export const sendGroupMessage = async (req, res) => {
     const groupId = req.params.groupId;
     const senderId = req.user.userId;
 
+    const encryptedMessage = CryptoJS.AES.encrypt(
+      message,
+      process.env.SECRET_KEY
+    ).toString();
+
     let groupMessage = await Group.findById(groupId);
 
     const newGroupMessage = new GroupMessage({
       senderId,
       groupId,
-      message,
+      message: encryptedMessage,
     });
 
     if (newGroupMessage) {
@@ -191,7 +197,10 @@ export const sendGroupMessage = async (req, res) => {
 
     await Promise.all([groupMessage.save(), newGroupMessage.save()]);
 
-    io.to(groupId).emit("newGroupMessage", newGroupMessage);
+    io.to(groupId).emit("newGroupMessage", {
+      ...newGroupMessage.toObject(),
+      message: encryptedMessage,
+    });
 
     return res.status(201).json(newGroupMessage);
   } catch (error) {
@@ -200,9 +209,13 @@ export const sendGroupMessage = async (req, res) => {
   }
 };
 
+const decryptMessage = (encryptedMessage) => {
+  const bytes = CryptoJS.AES.decrypt(encryptedMessage, process.env.SECRET_KEY);
+  return bytes.toString(CryptoJS.enc.Utf8);
+};
+
 export const getGroupMessages = async (req, res) => {
   try {
-    console.log("------------getGroupMessages-----------------");
     const groupId = req.params.id;
     const groupWithMessages = await Group.findById(groupId).populate(
       "messages"
@@ -210,8 +223,16 @@ export const getGroupMessages = async (req, res) => {
     if (!groupWithMessages) {
       return res.status(200).json([]);
     }
-    const messages = groupWithMessages.messages;
-    return res.status(200).json(messages);
+    const decryptedMessages = groupWithMessages.messages.map((message) => {
+      const decryptedMessage = decryptMessage(message.message);
+
+      return {
+        ...message.toObject(),
+        message: decryptedMessage,
+      };
+    });
+
+    return res.status(200).json(decryptedMessages);
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Internal Server Error" });

@@ -38,21 +38,15 @@ export const sendMessage = async (req, res) => {
 
     const receiverSocketId = getReciverSocketId(receiverId);
     if (receiverSocketId) {
-      const bytes = CryptoJS.AES.decrypt(
-        encryptedMessage,
-        process.env.SECRET_KEY
-      );
-      const decryptedMessage = bytes.toString(CryptoJS.enc.Utf8);
-
       io.to(receiverSocketId).emit("newMessage", {
         ...newMessage.toObject(),
-        message: decryptedMessage,
+        message: encryptedMessage,
       });
     }
 
     res.status(201).json({
       ...newMessage.toObject(),
-      message: message,
+      message: encryptedMessage,
     });
   } catch (error) {
     console.log("error", error.message);

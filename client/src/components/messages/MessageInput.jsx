@@ -2,10 +2,17 @@ import { BsSend } from "react-icons/bs";
 import useConversation from "../../zustand/useConversations";
 import axios from "../../axios";
 import { useState } from "react";
+import CryptoJS from "crypto-js";
 
 const MessageInput = () => {
+  const REACT_APP_SECRET_KEY = "qwertyufghdjkvbn$dvb";
   const { messages, setMessages, selectedConversation } = useConversation();
   const [inputs, setInputs] = useState("");
+
+  const decryptMessage = (encryptedMessage) => {
+    const bytes = CryptoJS.AES.decrypt(encryptedMessage, REACT_APP_SECRET_KEY);
+    return bytes.toString(CryptoJS.enc.Utf8);
+  };
 
   const sendMessage = async (message) => {
     try {
@@ -21,8 +28,9 @@ const MessageInput = () => {
         config
       );
       const data = res.data;
-      console.log("data", data);
-      setMessages([...messages, data]);
+      const decryptedMessage = decryptMessage(data.message);
+
+      setMessages([...messages, { ...data, message: decryptedMessage }]);
     } catch (error) {
       console.log("Error fetching data:", error);
     }
